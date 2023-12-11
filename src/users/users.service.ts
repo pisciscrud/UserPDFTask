@@ -145,7 +145,7 @@ export class UsersService {
           where: {
             id: userInfo.id,
           },
-          data: {
+          data: { 
             pdf: data,
           },
         });

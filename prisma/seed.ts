@@ -7,12 +7,18 @@ const bootstrap = async () => {
   try {
     const hash = await bcrypt.hash('password', 10);
 
+    const user = await seeder.user.findFirst({
+      where: { email: 'admin@admin.com' },
+    });
+
+    if (user) return;
+
     await seeder.user.create({
       data: {
         firstName: 'admin',
         lastName: 'admin',
         email: 'admin@admin.com',
-        image: 'src\\images\\dcf9e2e5-9b6a-412a-bd90-e3f57d8e97f4.png',
+        image: 'fb476846-a941-4685-9c3a-557a4ced78ff.png',
         password: hash,
       },
     });

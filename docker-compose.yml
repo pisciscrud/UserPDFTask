@@ -1,0 +1,38 @@
+version: '3.9'
+services:
+  userpdf-postgres:
+    image: 'postgres:14'
+    container_name: 'userpdf-postgres'
+    environment:
+      POSTGRES_DB: 'userpdf'
+      POSTGRES_USER: 'root'
+      POSTGRES_PASSWORD: 'root'
+    ports:
+      - '5432:5432'
+    volumes:
+      - userpdf-pgdata:/var/lib/postgresql/data
+    networks:
+      - userpdf-network
+
+  userpdf-app:
+    build:
+      context: ./
+    container_name: 'userpdf-app'
+    environment:
+      DATABASE_URL: 'postgresql://root:root@userpdf-postgres:5432/userpdf?schema=public'
+      SECRET: 'my-sekret'
+    command: npm run start
+    depends_on:
+      - userpdf-postgres
+    ports:
+      - 3000:3000
+    networks:
+      - userpdf-network
+
+networks:
+  userpdf-network:
+    driver: bridge
+
+volumes:
+  userpdf-pgdata:
+    driver: local
