@@ -16,27 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(tokenData: ITokenData): Promise<ITokenData> {
+
     return tokenData;
   }
 }
-
-// import { ExtractJwt, Strategy } from 'passport-jwt';
-// import { PassportStrategy } from '@nestjs/passport';
-// import { Injectable } from '@nestjs/common';
-// import { ConfigService } from '@nestjs/config';
-// import { ITokenData } from '../interfaces';
-
-// @Injectable()
-// export class JwtStrategy extends PassportStrategy(Strategy) {
-//   constructor(configService: ConfigService) {
-//     super({
-//       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-//       ignoreExpiration: false,
-//       secretOrKey: configService.get<string>('SECRET'),
-//     });
-//   }
-
-//   async validate(tokenData: ITokenData): Promise<ITokenData> {
-//     return tokenData;
-//   }
-// }

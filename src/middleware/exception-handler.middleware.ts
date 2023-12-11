@@ -1,46 +1,38 @@
 import {
-  ArgumentsHost,
-  Catch,
   ExceptionFilter,
+  Catch,
+  ArgumentsHost,
   HttpException,
-  InternalServerErrorException,
+  HttpStatus,
 } from '@nestjs/common';
-import { HttpStatus } from '@nestjs/common/enums';
-
-// import { WinstonLoggerService } from 'modules/winston-logger/winston-logger.service';
-// import { ExceptionMessage } from '../enums/exception-message.enum';
+import { HttpAdapterHost } from '@nestjs/core';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  //   constructor(private loggerService: WinstonLoggerService) {}
+  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: any, host: ArgumentsHost): void {
+    const { httpAdapter } = this.httpAdapterHost;
+
     const ctx = host.switchToHttp();
-    const responce = ctx.getResponse();
-    const request = ctx.getRequest();
 
-    if (exception instanceof HttpException) {
-      const status = exception.getStatus();
+    const httpStatus =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
-      //   this.loggerService.error(
-      //     `${request.method} ${request.url} QUERY ${JSON.stringify(
-      //       request.query,
-      //     )} BODY ${JSON.stringify(request.body)} ${JSON.stringify(
-      //       responce.errorBody,
-      //     )} ${exception}`,
-      //   );
+    const message =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : `INTERNAL_SERVER_ERROR`;
 
-      responce.status(status).json({
-        statusCode: status,
-        message: exception.message,
-      });
-    } else if (exception instanceof InternalServerErrorException) {
-      // this.loggerService.error(`${exception}`);
+    const responseBody = {
+      message: exception?.message || message,
+      statusCode: httpStatus,
+      timestamp: new Date().toISOString(),
+      path: httpAdapter.getRequestUrl(ctx.getRequest()),
+    };
 
-      responce.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: exception.message,
-      });
-    }
+    httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
   }
 }

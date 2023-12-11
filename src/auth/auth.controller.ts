@@ -19,9 +19,7 @@ export class AuthController {
     private readonly tokenService: TokenService,
   ) {}
   @Post('login')
-  async login(
-    @Body() dto: LoginUserDTO,
-  ) {
+  async login(@Body() dto: LoginUserDTO) {
     const existUser = await this.userService.findUserByEmail(dto.email);
     if (!existUser) {
       throw new HttpException(
@@ -37,7 +35,7 @@ export class AuthController {
     if (!passwordVerification) {
       throw new HttpException('Wrong data', HttpStatus.BAD_REQUEST);
     }
-    const token =  this.tokenService.generateJWTToken(existUser.id);
+    const token = this.tokenService.generateJWTToken(existUser.id);
 
     return { token };
   }

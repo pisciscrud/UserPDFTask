@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseFilePipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -13,10 +13,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-
+import { diskStorage } from 'multer';
+import { v4 as uuid } from 'uuid';
 import { JwtAuthGuard } from 'src/auth/guards/auth-guard';
-import { CreateUserDTO, UpdateUserDTO } from 'src/dto/user';
+import { CreateUserDTO, EmailParam, UpdateUserDTO } from 'src/dto/user';
 import { UsersService } from './users.service';
+import * as path from 'path';
 
 @Controller('users')
 export class UsersController {
@@ -35,7 +37,16 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: 'public/img',
+        filename: (req, file, cb) => {
+          cb(null, `${uuid()}${path.extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
   @Post('/create')
   async createUser(
     @Body() dto: CreateUserDTO,
@@ -52,14 +63,30 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: 'public/img',
+        filename: (req, file, cb) => {
+          cb(null, `${uuid()}${path.extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
   @Put('/update/:id')
   async updateUser(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: Partial<CreateUserDTO>,
-    @UploadedFile() file: Express.Multer.File,
+    @Body() dto: UpdateUserDTO,
+    @UploadedFile(new ParseFilePipe({ fileIsRequired: false }))
+    file: Express.Multer.File,
   ) {
-    console.log(dto);
-    await this.userService.updateUser(id, dto, file);
+    return await this.userService.updateUser(id, dto, file);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/generatePDF')
+  async generatePDF(@Body() dto: EmailParam) {
+    const result = await this.userService.GeneratePDF(dto.email);
+    return { result };
   }
 }
